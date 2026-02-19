@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "LinearAlgebraProvider.hpp"
+#include "Assets.hpp"
 
 using namespace std;
 
