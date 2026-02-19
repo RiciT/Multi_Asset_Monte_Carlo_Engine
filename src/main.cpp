@@ -7,7 +7,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-  std::vector<double> mat = {2,5,5,2};
+  std::vector<double> mat = {5,2,2,5};
 
   mat = LinearAlgebraProvider::cholesky(mat, 2);
   stringstream ss;
