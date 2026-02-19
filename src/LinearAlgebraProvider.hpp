@@ -6,6 +6,10 @@ class LinearAlgebraProvider {
 public:
     explicit LinearAlgebraProvider();
 
+    //TODO: Adapt to cases where the correlation matrix isnt perfectly positive definite but has a slightly negative eValue in that case find closest matrix
+    // https://math.stackexchange.com/questions/1098039/converting-a-matrix-to-the-nearest-positive-definite-matrix --->
+    //      https://nhigham.com/2021/01/26/what-is-the-nearest-positive-semidefinite-matrix/
+    //      https://nhigham.com/2021/02/16/diagonally-perturbing-a-symmetric-matrix-to-make-it-positive-definite/
     static std::vector<double> cholesky(const std::vector<double> &matrix, const int N)
     {
         std::vector res(N * N, 0.0);
