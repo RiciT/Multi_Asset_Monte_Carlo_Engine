@@ -4,4 +4,4 @@ project(Multi_Asset_Monte_Carlo_Engine)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(Multi_Asset_Monte_Carlo_Engine
-        main.cpp)
+        src/main.cpp)
