@@ -1,9 +1,15 @@
 #pragma once
 
+#include <utility>
+
 #include "MultiAssetSimulator.hpp"
 
 class BasketCallOption {
 public:
+    explicit BasketCallOption(MultiAssetSimulator simulator)
+        : simulator(std::move(simulator))
+    {}
+
     double calculateBasketCallPrice(int numPaths, double strike, double T, double r, const std::vector<Asset>& basket)
     {
         double totalPayoff = 0.0;
