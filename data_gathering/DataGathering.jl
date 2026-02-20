@@ -1,7 +1,7 @@
-using MarketData, Statistics, CSV, DataFrames, Dates
+using YFinance, Statistics, CSV, DataFrames, Dates
 
 # defining the basket
-# late need to find some other more fun ones but for now stick to FAANG
+# later need to find some other more fun ones but for now stick to FAANG
 
 tickers = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META"];
 
@@ -14,11 +14,13 @@ println("Fetching a year of data for: ", tickers);
 pricesDF = DataFrame();
 
 for t in tickers
-  data = yahoo(t, YahooOpt(period1=DateTime(startDate)))
-  pricesDF[!, t] = values(data[:Close])
+  data = get_prices(t, startdate = startDate);
+  pricesDF[!, t] = data["adjclose"];
 end
+dropmissing!(pricesDF);
 
-returns = diff(log.(Matrix(pricesDF)), dims=1)
+priceMatrix = Matrix{Float64}(pricesDF);
+returns = diff(log.(priceMatrix, dims=1);
 
 # simple parameter estimation for now
 # estimating annualized volatility (standard deviation * \sqrt{252})
