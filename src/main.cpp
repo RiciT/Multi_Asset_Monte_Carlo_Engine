@@ -10,12 +10,12 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
     int numAssets = 2;
-    int numSteps = 252;  //trading days in a year
+    int numSteps = 252; //252 //trading days in a year
     double T = 1.0;
-    double r = 0.05;
+    double r = 0.03;
 
     std::vector<Asset> assets = {
-      {100.0, 0.20, r},
+      {100.0, 0.2, r},
       {100.0, 0.25, r}
     };
 
@@ -24,7 +24,6 @@ int main(int argc, char *argv[]) {
         -0.7,  1.0
     };
 
-    // 3. Compute Cholesky from scratch
     std::vector<double> L;
     try {
         L = LinearAlgebraProvider::cholesky(correlationMatrix, numAssets);
@@ -33,10 +32,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // 4. Run Monte Carlo Simulation
     MultiAssetSimulator sim(numAssets, numSteps, T, L);
 
-    int numPaths = 100000;
+    int numPaths = 10000;
     std::vector<double> sumTerminalPrices(numAssets, 0.0);
     double correlationSum = 0.0;
 
