@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <chrono>
+#include <ranges>
 
 #include "LinearAlgebraProvider.hpp"
 #include "MultiAssetSimulator.hpp"
@@ -9,13 +10,36 @@
 
 using namespace std;
 
+template <typename S>
+ostream& operator<<(ostream& os,
+                    const vector<S>& vector) {
+
+    // Printing all the elements using <<
+    for (auto i : vector)
+        os << i << " ";
+    return os;
+}
+
+
 int main(int argc, char *argv[]) {
-    const auto start = std::chrono::high_resolution_clock::now();
+    auto start = std::chrono::high_resolution_clock::now();
+
+    constexpr int numPaths = 1000000;
     try {
         //parse generated csvs
         const std::vector<double> marketSpots = DataParser::parseCSVs("../data/market_spots.csv");
         const std::vector<double> marketVols = DataParser::parseCSVs("../data/market_vols.csv");
         const std::vector<double> marketCorrelation = DataParser::parseCSVs("../data/market_correlation.csv");
+
+        //printing data
+        std::cout << "spots: " << std::endl << marketSpots << std::endl <<"volatilities: " << std::endl ;
+        std::cout << marketVols << std::endl << "correlation_matrix: "  ;
+        for (const auto [i, val] : std::views::enumerate(marketCorrelation))
+        { if (i % static_cast<typeof(i)>(sqrt(marketCorrelation.size())) == 0) std::cout << std::endl; std::cout << val << " ";  }
+        std::cout << std::endl << std::endl;
+
+        //only starting clock after prints
+        start = std::chrono::high_resolution_clock::now();
 
         //setup
         const int numAssets = static_cast<int>(marketSpots.size());
@@ -23,7 +47,6 @@ int main(int argc, char *argv[]) {
         constexpr double riskFreeRate = 0.037; //using 3.7% as the approximate 3 month us treasury rate
         constexpr double timeToMaturity = 1.0;
         constexpr int numSteps = 252; //num of trading days in a year
-        constexpr int numPaths = 100000;
 
         std::vector<Asset> basket;
         basket.reserve(numAssets); //avoid reallocs
@@ -35,7 +58,7 @@ int main(int argc, char *argv[]) {
         //running sim and pricing pricing
         constexpr double strikePrice = 200.0;
         const MultiAssetSimulator simulator(numAssets, numSteps, timeToMaturity, choleskyMatrix);
-        BasketCallOption basketCallModel(simulator);
+        const BasketCallOption basketCallModel(simulator);
         const double optionPrice = basketCallModel.calculateBasketCallPrice(numPaths, strikePrice, timeToMaturity, riskFreeRate, basket);
 
         std::cout << "Basket Option Price: $" << optionPrice << std::endl;
@@ -45,7 +68,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     const auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Wall-clock runtime: " << end-start << std::endl;
+    std::cout << "Wall-clock runtime: " << end-start << " with " << numPaths << " paths." << std::endl;
 
     return 0;
 }

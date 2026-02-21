@@ -3,7 +3,8 @@
 
 #include "MultiAssetSimulator.hpp"
 
-std::vector<double> MultiAssetSimulator::generatePath(const std::vector<Asset> &basket, std::mt19937& localRng, std::normal_distribution<double> n_dist)
+std::vector<double> MultiAssetSimulator::generatePath(const std::vector<Asset> &basket,
+    std::mt19937 &localRng, std::normal_distribution<>& n_dist) const
 {
     std::vector<double> currentPrices(numAssets);
     //we work in log-space to avoid floating point errors
@@ -15,7 +16,7 @@ std::vector<double> MultiAssetSimulator::generatePath(const std::vector<Asset> &
     for (auto t = 0; t < numSteps; ++t)
     {
         //Gen independent draws of standard normal
-        for (auto i = 0; i < numAssets; ++i) Z[i] = normal_dist(rng);
+        for (auto i = 0; i < numAssets; ++i) Z[i] = n_dist(localRng);
 
         //Apply correlation matrix
         for (auto i = 0; i < numAssets; ++i)
