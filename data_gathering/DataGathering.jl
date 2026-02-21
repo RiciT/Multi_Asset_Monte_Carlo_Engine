@@ -1,35 +1,52 @@
-using YFinance, Statistics, CSV, DataFrames, Dates
+using Downloads, CSV, DataFrames, Statistics, Dates, LinearAlgebra
 
-# defining the basket
-# later need to find some other more fun ones but for now stick to FAANG
+# find some more interesting ones later but now sticking with FAANG
+tickers = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META"]
 
-tickers = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META"];
-
-endDate = today();
-startDate = endDate - Year(1);
-
-println("Fetching a year of data for: ", tickers);
-
-# use the 'close' price to calculate daily log-returns since we are going day by day in our simulation
-pricesDF = DataFrame();
-
-for t in tickers
-  data = get_prices(t, startdate = startDate);
-  pricesDF[!, t] = data["adjclose"];
+function fetchStooqData(ticker)
+    url = "https://stooq.com/q/d/l/?s=$(lowercase(ticker)).us&i=d";
+    io = IOBuffer();
+    Downloads.download(url, io);
+    seekstart(io);
+    return CSV.read(io, DataFrame);
 end
-dropmissing!(pricesDF);
 
-priceMatrix = Matrix{Float64}(pricesDF);
-returns = diff(log.(priceMatrix, dims=1);
+try
+    local pricesDf;
+    pricesDf = fetchStooqData(tickers[1]);
+    pricesDf = pricesDf[:, [:Date, :Close]];
+    rename!(pricesDf, :Close => Symbol(tickers[1]));
 
-# simple parameter estimation for now
-# estimating annualized volatility (standard deviation * \sqrt{252})
-volatilities = std(returns, dims=1) .* sqrt(252)
-corrMatrix = cor(returns)
-spots = Vector(pricesDF[end, :])
+    for i in 2:length(tickers)
+        currentTicker = tickers[i];
+        
+        tempDf = fetchStooqData(currentTicker);
+        tempDf = tempDf[:, [:Date, :Close]];
+        rename!(tempDf, :Close => Symbol(currentTicker));
+        
+        pricesDf = innerjoin(pricesDf, tempDf, on=:Date);
+    end
 
-CSV.write("market_vols.csv", DataFrame(vols = vec(vols)))
-CSV.write("market_spots.csv", DataFrame(spots = spots));
-CSV.write("market_correlation.csv", Tables.table(corrMatrix), header=false);
+    sort!(pricesDf, :Date);
+    pricesDf = last(pricesDf, 252);
+    
+    priceCols = Symbol.(tickers);
+    priceMatrix = Matrix{Float64}(pricesDf[:, priceCols]);
+    
+    returns = diff(log.(priceMatrix), dims=1);
+    vols = std(returns, dims=1) .* sqrt(252);
+    
+    corrMatrix = cor(returns);
+    corrMatrix += I * 1e-8;
+    
+    spots = priceMatrix[end, :];
 
-println("succesful data acquisition")
+    CSV.write("../data/market_vols.csv", DataFrame(vols = vec(vols)), header=false);
+    CSV.write("../data/market_spots.csv", DataFrame(spots = vec(spots)), header=false);
+    CSV.write("../data/market_correlation.csv", Tables.table(corrMatrix), header=false);
+
+    println("done.");
+
+catch e
+    @error "data fetch failed" exception=(e, catch_backtrace());
+end

@@ -39,5 +39,4 @@ private:
     {
         return i * N + j;
     }
-
 };
