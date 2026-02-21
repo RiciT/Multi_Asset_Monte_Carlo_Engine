@@ -17,20 +17,18 @@ public:
         const int numAssets = static_cast<int>(basket.size());
         const double dt = T / static_cast<double>(simulator.getNumSteps());
 
-        // Precompute all static simulation parameters to eliminate redundant inner-loop math
-        std::vector<double> startLogSpots(numAssets);
-        std::vector<double> drifts(numAssets);
-        std::vector<double> diffusions(numAssets);
+        //precompute all static simulation parameters to eliminate redundant inner-loop math
+        std::vector<PrecomputedAsset> precompBasket;
 
         for (int i = 0; i < numAssets; ++i) {
-            startLogSpots[i] = std::log(basket[i].spot);
-            drifts[i] = (basket[i].risk_free_rate - 0.5 * basket[i].volatility * basket[i].volatility) * dt;
-            diffusions[i] = basket[i].volatility * std::sqrt(dt);
+            precompBasket[i].logSpot = std::log(basket[i].spot);
+            precompBasket[i].drift = (basket[i].risk_free_rate - 0.5 * basket[i].volatility * basket[i].volatility) * dt;
+            precompBasket[i].diffusion = basket[i].volatility * std::sqrt(dt);
         }
 
         double totalPayoff = 0.0;
 
-        #pragma omp parallel default(none) shared(numPaths, strike, basket, numAssets, startLogSpots, drifts, diffusions) reduction(+:totalPayoff)
+        #pragma omp parallel default(none) shared(numPaths, strike, basket, numAssets, precompBasket) reduction(+:totalPayoff)
         {
             //thread local rng - we need unique seeds (using thread id) so the streams dont overlap
             const int threadId = omp_get_thread_num();
@@ -47,7 +45,7 @@ public:
             // ReSharper disable once CppDFAUnreadVariable
             for (auto p = 0; p < numPaths; ++p)
             {
-                simulator.generatePath(startLogSpots, drifts, diffusions, basket, localRng, normalDist, currentPrices, Z, X);
+                simulator.generatePath(precompBasket, localRng, normalDist, currentPrices, Z, X);
 
                 // ReSharper disable once CppDFAUnreadVariable
                 double averagePrice = 0.0;

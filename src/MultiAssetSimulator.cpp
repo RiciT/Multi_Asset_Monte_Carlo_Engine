@@ -3,15 +3,12 @@
 
 #include "MultiAssetSimulator.hpp"
 
-void MultiAssetSimulator::generatePath(const std::vector<double>& startLogSpots,
-                      const std::vector<double>& drifts,
-                      const std::vector<double>& diffusions,
-                      const std::vector<Asset> &basket,
+void MultiAssetSimulator::generatePath(const std::vector<PrecomputedAsset> &basket,
                       std::mt19937 &localRng, std::normal_distribution<>& n_dist,
                       std::vector<double>& currentPrices, std::vector<double>& Z, std::vector<double>& X) const
 {
     //we work in log-space to avoid floating point errors
-    for (auto i = 0; i < numAssets; ++i) currentPrices[i] = startLogSpots[i];
+    for (auto i = 0; i < numAssets; ++i) currentPrices[i] = basket[i].logSpot;
 
     for (auto t = 0; t < numSteps; ++t)
     {
@@ -30,7 +27,7 @@ void MultiAssetSimulator::generatePath(const std::vector<double>& startLogSpots,
         //S_{i, t + \delta t} = S_{i, t} * e^{(r - 0.5 \sigma_i^2)\delta t + \sigma_i \sqrt{\delta t}\dot X_i}
         for (auto i = 0; i < numAssets; ++i)
         {
-            currentPrices[i] += drifts[i] + diffusions[i] * X[i];
+            currentPrices[i] += basket[i].drift + basket[i].diffusion * X[i];
         }
     }
 
