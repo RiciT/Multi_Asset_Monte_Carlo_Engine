@@ -18,21 +18,35 @@ public:
 
         #pragma omp parallel default(none) shared(numPaths, strike, basket) reduction(+:totalPayoff)
         {
-            //thread loccal rng - we need unique seeds (using thread id) so the streams dont overlap
+            //thread local rng - we need unique seeds (using thread id) so the streams dont overlap
             const int threadId = omp_get_thread_num();
             std::mt19937 localRng(42 + threadId); //mersenne twister random
             std::normal_distribution normalDist(0.0, 1.0);
 
+            const int numAssets = static_cast<int>(basket.size());
+            std::vector<double> currentPrices(numAssets);
+            std::vector<double> Z(numAssets);
+            std::vector<double> X(numAssets);
+
+            //disabled warnings are because it does not recognise (because of omp) that they are being used
             #pragma omp for
+            // ReSharper disable once CppDFALoopConditionNotUpdated
+            // ReSharper disable once CppDFAUnreadVariable
             for (auto p = 0; p < numPaths; ++p)
             {
-                std::vector<double> terminalPrices = simulator.generatePath(basket, localRng, normalDist);
+                simulator.generatePath(basket, localRng, normalDist, currentPrices, Z, X);
 
+                // ReSharper disable once CppDFAUnreadVariable
                 double averagePrice = 0.0;
-                for (const auto prices : terminalPrices) averagePrice += prices;
-                averagePrice /= static_cast<double>(basket.size());
+                // ReSharper disable once CppDFALoopConditionNotUpdated
+                // ReSharper disable once CppDFAUnreadVariable
+                for (int i = 0; i < numAssets; ++i) {
+                    averagePrice += currentPrices[i];
+                }
+                averagePrice /= static_cast<double>(numAssets);
 
-                //standard call payoff is: max(avg - strikePrice, 0)
+                // ReSharper disable once CppDFAUnusedValue
+                // ReSharper disable once CppDFAUnreadVariable
                 const double payoff = std::max(averagePrice - strike, 0.0);
                 totalPayoff += payoff;
             }
