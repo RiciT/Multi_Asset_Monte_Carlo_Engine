@@ -14,16 +14,29 @@ public:
     [[nodiscard]] double calculateBasketCallPrice(const int numPaths, const double strike, const double T,
         const double r, const std::vector<Asset>& basket) const
     {
+        const int numAssets = static_cast<int>(basket.size());
+        const double dt = T / static_cast<double>(simulator.getNumSteps());
+
+        // Precompute all static simulation parameters to eliminate redundant inner-loop math
+        std::vector<double> startLogSpots(numAssets);
+        std::vector<double> drifts(numAssets);
+        std::vector<double> diffusions(numAssets);
+
+        for (int i = 0; i < numAssets; ++i) {
+            startLogSpots[i] = std::log(basket[i].spot);
+            drifts[i] = (basket[i].risk_free_rate - 0.5 * basket[i].volatility * basket[i].volatility) * dt;
+            diffusions[i] = basket[i].volatility * std::sqrt(dt);
+        }
+
         double totalPayoff = 0.0;
 
-        #pragma omp parallel default(none) shared(numPaths, strike, basket) reduction(+:totalPayoff)
+        #pragma omp parallel default(none) shared(numPaths, strike, basket, numAssets, startLogSpots, drifts, diffusions) reduction(+:totalPayoff)
         {
             //thread local rng - we need unique seeds (using thread id) so the streams dont overlap
             const int threadId = omp_get_thread_num();
             std::mt19937 localRng(42 + threadId); //mersenne twister random
             std::normal_distribution normalDist(0.0, 1.0);
 
-            const int numAssets = static_cast<int>(basket.size());
             std::vector<double> currentPrices(numAssets);
             std::vector<double> Z(numAssets);
             std::vector<double> X(numAssets);
@@ -34,7 +47,7 @@ public:
             // ReSharper disable once CppDFAUnreadVariable
             for (auto p = 0; p < numPaths; ++p)
             {
-                simulator.generatePath(basket, localRng, normalDist, currentPrices, Z, X);
+                simulator.generatePath(startLogSpots, drifts, diffusions, basket, localRng, normalDist, currentPrices, Z, X);
 
                 // ReSharper disable once CppDFAUnreadVariable
                 double averagePrice = 0.0;

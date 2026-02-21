@@ -11,9 +11,13 @@ public:
     {}
 
     //single path for the entire basket
-    void generatePath(const std::vector<Asset> &basket, std::mt19937& localRng, std::normal_distribution<>& n_dist,
-        std::vector<double>& currentPrices, std::vector<double>& Z, std::vector<double>& X) const;
+    void generatePath(const std::vector<double>& startLogSpots,
+                      const std::vector<double>& drifts,
+                      const std::vector<double>& diffusions,
+                      const std::vector<Asset> &basket, std::mt19937& localRng, std::normal_distribution<>& n_dist,
+                      std::vector<double>& currentPrices, std::vector<double>& Z, std::vector<double>& X) const;
 
+    [[nodiscard]] int getNumSteps() const { return numSteps; }
 private:
     int numAssets;
     int numSteps;

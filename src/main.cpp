@@ -24,7 +24,7 @@ ostream& operator<<(ostream& os,
 int main(int argc, char *argv[]) {
     auto start = std::chrono::high_resolution_clock::now();
 
-    constexpr int numPaths = 100000;
+    constexpr int numPaths = 1000000;
     try {
         //parse generated csvs
         const std::vector<double> marketSpots = DataParser::parseCSVs("../data/market_spots.csv");

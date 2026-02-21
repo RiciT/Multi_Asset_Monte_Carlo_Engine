@@ -3,19 +3,22 @@
 
 #include "MultiAssetSimulator.hpp"
 
-void MultiAssetSimulator::generatePath(const std::vector<Asset> &basket,
-    std::mt19937 &localRng, std::normal_distribution<>& n_dist,
-    std::vector<double>& currentPrices, std::vector<double>& Z, std::vector<double>& X) const
+void MultiAssetSimulator::generatePath(const std::vector<double>& startLogSpots,
+                      const std::vector<double>& drifts,
+                      const std::vector<double>& diffusions,
+                      const std::vector<Asset> &basket,
+                      std::mt19937 &localRng, std::normal_distribution<>& n_dist,
+                      std::vector<double>& currentPrices, std::vector<double>& Z, std::vector<double>& X) const
 {
     //we work in log-space to avoid floating point errors
-    for (auto i = 0; i < numAssets; ++i) currentPrices[i] = std::log(basket[i].spot);
+    for (auto i = 0; i < numAssets; ++i) currentPrices[i] = startLogSpots[i];
 
     for (auto t = 0; t < numSteps; ++t)
     {
-        //Gen independent draws of standard normal
+        //gen independent draws of standard normal
         for (auto i = 0; i < numAssets; ++i) Z[i] = n_dist(localRng);
 
-        //Apply correlation matrix
+        //apply correlation matrix
         for (auto i = 0; i < numAssets; ++i)
         {
             X[i] = 0.0;
@@ -27,9 +30,7 @@ void MultiAssetSimulator::generatePath(const std::vector<Asset> &basket,
         //S_{i, t + \delta t} = S_{i, t} * e^{(r - 0.5 \sigma_i^2)\delta t + \sigma_i \sqrt{\delta t}\dot X_i}
         for (auto i = 0; i < numAssets; ++i)
         {
-            const double drift = (basket[i].risk_free_rate - 0.5 * basket[i].volatility * basket[i].volatility) * dt;
-            const double diffusion = basket[i].volatility * sqrt(dt) * X[i];
-            currentPrices[i] += drift + diffusion;
+            currentPrices[i] += drifts[i] + diffusions[i] * X[i];
         }
     }
 
