@@ -7,7 +7,7 @@
 class MultiAssetSimulator {
 public:
     explicit MultiAssetSimulator(int assets, const int steps, const double T, const std::vector<double>& choleskyL) // NOLINT(*-msc51-cpp)
-        : numAssets(assets), numSteps(steps), normal_dist(0.0, 1.0), corrMatrix(choleskyL)
+        : numAssets(assets), numSteps(steps), corrMatrix(choleskyL), normal_dist(0.0, 1.0)
     {
         dt = T / steps;
         std::random_device rd;

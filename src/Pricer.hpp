@@ -10,7 +10,7 @@ public:
         : simulator(std::move(simulator))
     {}
 
-    double calculateBasketCallPrice(int numPaths, double strike, double T, double r, const std::vector<Asset>& basket)
+    double calculateBasketCallPrice(const int numPaths, const double strike, const double T, const double r, const std::vector<Asset>& basket)
     {
         double totalPayoff = 0.0;
 
@@ -19,11 +19,11 @@ public:
             std::vector<double> terminalPrices = simulator.generatePath(basket);
 
             double averagePrice = 0.0;
-            for (auto prices : terminalPrices) averagePrice += prices;
-            averagePrice /= basket.size();
+            for (const auto prices : terminalPrices) averagePrice += prices;
+            averagePrice /= static_cast<double>(basket.size());
 
             //standard call payoff is: max(avg - strikePrice, 0)
-            double payoff = std::max(averagePrice - strike, 0.0);
+            const double payoff = std::max(averagePrice - strike, 0.0);
             totalPayoff += payoff;
         }
 
