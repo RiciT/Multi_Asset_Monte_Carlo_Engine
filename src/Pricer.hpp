@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include <omp.h>
 
 #include "MultiAssetSimulator.hpp"
 
@@ -14,9 +15,14 @@ public:
     {
         double totalPayoff = 0.0;
 
+        #pragma omp paralell for reduction (+:totalPayoff)
         for (auto p = 0; p < numPaths; ++p)
         {
-            std::vector<double> terminalPrices = simulator.generatePath(basket);
+            //thread loccal rng - we need unique seeds (using thread id) so the streams dont overlap
+            std::mt19937 localRng(42 + omp_get_thread_num() * 1000 + p);
+            const std::normal_distribution normalDist(0.0, 1.0);
+
+            std::vector<double> terminalPrices = simulator.generatePath(basket, localRng, normalDist);
 
             double averagePrice = 0.0;
             for (const auto prices : terminalPrices) averagePrice += prices;
@@ -28,7 +34,7 @@ public:
         }
 
         //average and discount back to present value
-        double averagePayoff = totalPayoff / numPaths;
+        const double averagePayoff = totalPayoff / numPaths;
         //using formula V_0 * e^{-rT}
         return std::exp(-r * T) * averagePayoff;
     }

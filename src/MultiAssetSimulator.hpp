@@ -15,7 +15,7 @@ public:
     }
 
     //single path for the entire basket
-    std::vector<double> generatePath(const std::vector<Asset>& basket);
+    std::vector<double> generatePath(const std::vector<Asset> &basket, std::mt19937& localRng, std::normal_distribution<double> n_dist);
 
 private:
     int numAssets;

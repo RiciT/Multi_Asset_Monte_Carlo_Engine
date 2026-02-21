@@ -1,6 +1,6 @@
 #include <iostream>
 #include <sstream>
-#include <ctime>
+#include <chrono>
 
 #include "LinearAlgebraProvider.hpp"
 #include "MultiAssetSimulator.hpp"
@@ -10,8 +10,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-    clock_t tStart = clock();
-
+    const auto start = std::chrono::high_resolution_clock::now();
     try {
         //parse generated csvs
         const std::vector<double> marketSpots = DataParser::parseCSVs("../data/market_spots.csv");
@@ -21,17 +20,17 @@ int main(int argc, char *argv[]) {
         //setup
         const int numAssets = static_cast<int>(marketSpots.size());
 
-        double riskFreeRate = 0.037; //using 3.7% as the approximate 3 month us treasury rate
-        double timeToMaturity = 1.0;
+        constexpr double riskFreeRate = 0.037; //using 3.7% as the approximate 3 month us treasury rate
+        constexpr double timeToMaturity = 1.0;
         constexpr int numSteps = 252; //num of trading days in a year
-        int numPaths = 100000;
+        constexpr int numPaths = 100000;
 
         std::vector<Asset> basket;
         basket.reserve(numAssets); //avoid reallocs
         for (int i = 0; i < numAssets; ++i) {
             basket.push_back({marketSpots[i], marketVols[i], riskFreeRate});
         }
-        std::vector<double> choleskyMatrix = LinearAlgebraProvider::cholesky(marketCorrelation, numAssets);
+        const std::vector<double> choleskyMatrix = LinearAlgebraProvider::cholesky(marketCorrelation, numAssets);
 
         //running sim and pricing pricing
         constexpr double strikePrice = 200.0;
@@ -45,7 +44,8 @@ int main(int argc, char *argv[]) {
         std::cerr << "Runtime Error: " << e.what() << std::endl;
         return 1;
     }
+    const auto end = std::chrono::high_resolution_clock::now();
+    std::cout << "Wall-clock runtime: " << end-start << std::endl;
 
-    printf("Time taken: %.2fs\n", static_cast<double>(clock() - tStart)/CLOCKS_PER_SEC);
     return 0;
 }
