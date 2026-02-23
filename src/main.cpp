@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
         std::cout << "Wall-clock runtime for decomp took: " << diff << "s "<< std::endl;
 
         //running sim and pricing pricing
-        constexpr double strikePrice = 200.0;
+        constexpr double strikePrice = 75.0;
         const MultiAssetSimulator simulator(numAssets, numSteps, timeToMaturity, choleskyMatrix);
         const BasketCallOption basketCallModel(simulator);
         const double optionPrice = basketCallModel.calculateBasketCallPrice(numPaths, strikePrice, timeToMaturity, riskFreeRate, basket);

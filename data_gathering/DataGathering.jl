@@ -1,7 +1,8 @@
 using Downloads, CSV, DataFrames, Statistics, Dates, LinearAlgebra
 
 # find some more interesting ones later but now sticking with FAANG
-tickers = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META"]
+# tickers = ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META"]
+tickers = ["COP", "SHEL", "TTE", "XOM", "ENB", "DAL", "UAL", "LUV", "AAL", "SKYW", "JBLU"]
 
 function fetchStooqData(ticker)
     url = "https://stooq.com/q/d/l/?s=$(lowercase(ticker)).us&i=d";
