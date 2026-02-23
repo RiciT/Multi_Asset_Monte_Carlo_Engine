@@ -25,7 +25,7 @@ public:
                     const double val = matrix[index_2d_to_1d(i, i, N)] - s;
                     if (val <= 0)
                     {
-                        if (it < 2) { isPosDef = false; break; }
+                        if (it < 2) { isPosDef = false; std::cout << "using NCM"; break; }
                         throw std::runtime_error("Matrix still not posdef after Higham's algorithm");
                     }
                     res[index_2d_to_1d(i, j, N)] = std::sqrt(val);

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     //init close
     auto start = std::chrono::high_resolution_clock::now();
 
-    constexpr int numPaths = 1000000;
+    constexpr int numPaths = 100000;
     try {
         //parse generated csvs
         const std::vector<double> marketSpots = DataParser::parseCSVs("../data/market_spots.csv");
@@ -56,7 +56,12 @@ int main(int argc, char *argv[]) {
         basket.reserve(numAssets); //avoid reallocs
         for (int i = 0; i < numAssets; ++i)
             basket.push_back({marketSpots[i], marketVols[i], riskFreeRate});
+
+        auto startmat = std::chrono::high_resolution_clock::now();
         const std::vector<double> choleskyMatrix = LinearAlgebraProvider::cholesky(marketCorrelation, numAssets);
+        auto endmat = std::chrono::high_resolution_clock::now();
+        const auto diff = static_cast<double>((endmat-startmat).count()) / 1000000000.0;
+        std::cout << "Wall-clock runtime for decomp took: " << diff << "s "<< std::endl;
 
         //running sim and pricing pricing
         constexpr double strikePrice = 200.0;
