@@ -22,6 +22,7 @@ ostream& operator<<(ostream& os,
 
 
 int main(int argc, char *argv[]) {
+    //init close
     auto start = std::chrono::high_resolution_clock::now();
 
     constexpr int numPaths = 1000000;
@@ -32,6 +33,9 @@ int main(int argc, char *argv[]) {
         const std::vector<double> marketCorrelation = DataParser::parseCSVs("../data/market_correlation.csv");
 
         //printing data
+        auto avg = 0.0;
+        for (const auto i : marketSpots) avg += i;
+        std::cout << "current avg: " << avg / static_cast<double>(marketSpots.size()) << std::endl;
         std::cout << "spots: " << std::endl << marketSpots << std::endl <<"volatilities: " << std::endl ;
         std::cout << marketVols << std::endl << "correlation_matrix: "  ;
         for (const auto [i, val] : std::views::enumerate(marketCorrelation))
@@ -68,7 +72,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     const auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Wall-clock runtime: " << end-start << " with " << numPaths << " paths." << std::endl;
+    const auto diff = static_cast<double>((end-start).count()) / 1000000000.0;
+    std::cout << "Wall-clock runtime: " << diff << "s with " << numPaths << " paths." << std::endl;
 
     return 0;
 }
