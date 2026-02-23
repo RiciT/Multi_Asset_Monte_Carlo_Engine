@@ -37,7 +37,6 @@ try
     vols = std(returns, dims=1) .* sqrt(252);
     
     corrMatrix = cor(returns);
-    corrMatrix += I * 1e-8;
     
     spots = priceMatrix[end, :];
 
