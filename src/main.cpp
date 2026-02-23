@@ -54,9 +54,8 @@ int main(int argc, char *argv[]) {
 
         std::vector<Asset> basket;
         basket.reserve(numAssets); //avoid reallocs
-        for (int i = 0; i < numAssets; ++i) {
+        for (int i = 0; i < numAssets; ++i)
             basket.push_back({marketSpots[i], marketVols[i], riskFreeRate});
-        }
         const std::vector<double> choleskyMatrix = LinearAlgebraProvider::cholesky(marketCorrelation, numAssets);
 
         //running sim and pricing pricing

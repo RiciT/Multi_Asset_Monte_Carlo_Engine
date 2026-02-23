@@ -21,7 +21,8 @@ public:
         //precompute all static simulation parameters to eliminate redundant inner-loop math
         std::vector<PrecomputedAsset> precompBasket(numAssets);
 
-        for (int i = 0; i < numAssets; ++i) {
+        for (int i = 0; i < numAssets; ++i)
+        {
             precompBasket[i].logSpot = std::log(basket[i].spot);
             precompBasket[i].drift = (basket[i].risk_free_rate - 0.5 * basket[i].volatility * basket[i].volatility) * dt;
             precompBasket[i].diffusion = basket[i].volatility * std::sqrt(dt);
@@ -52,7 +53,8 @@ public:
                 double averagePrice = 0.0;
                 // ReSharper disable once CppDFALoopConditionNotUpdated
                 // ReSharper disable once CppDFAUnreadVariable
-                for (int i = 0; i < numAssets; ++i) {
+                for (int i = 0; i < numAssets; ++i)
+                {
                     averagePrice += currentPrices[i];
                 }
                 averagePrice /= static_cast<double>(numAssets);
