@@ -4,6 +4,7 @@
 #include <omp.h>
 
 #include "MultiAssetSimulator.hpp"
+#include "Assets.hpp"
 
 class BasketCallOption {
 public:
@@ -18,9 +19,10 @@ public:
         const double dt = T / static_cast<double>(simulator.getNumSteps());
 
         //precompute all static simulation parameters to eliminate redundant inner-loop math
-        std::vector<PrecomputedAsset> precompBasket;
+        std::vector<PrecomputedAsset> precompBasket(numAssets);
 
-        for (int i = 0; i < numAssets; ++i) {
+        for (int i = 0; i < numAssets; ++i)
+        {
             precompBasket[i].logSpot = std::log(basket[i].spot);
             precompBasket[i].drift = (basket[i].risk_free_rate - 0.5 * basket[i].volatility * basket[i].volatility) * dt;
             precompBasket[i].diffusion = basket[i].volatility * std::sqrt(dt);
@@ -28,7 +30,7 @@ public:
 
         double totalPayoff = 0.0;
 
-        #pragma omp parallel default(none) shared(numPaths, strike, basket, numAssets, precompBasket) reduction(+:totalPayoff)
+        #pragma omp parallel shared(numPaths, strike, basket, numAssets, precompBasket) reduction(+:totalPayoff)
         {
             //thread local rng - we need unique seeds (using thread id) so the streams dont overlap
             const int threadId = omp_get_thread_num();
@@ -51,7 +53,8 @@ public:
                 double averagePrice = 0.0;
                 // ReSharper disable once CppDFALoopConditionNotUpdated
                 // ReSharper disable once CppDFAUnreadVariable
-                for (int i = 0; i < numAssets; ++i) {
+                for (int i = 0; i < numAssets; ++i)
+                {
                     averagePrice += currentPrices[i];
                 }
                 averagePrice /= static_cast<double>(numAssets);

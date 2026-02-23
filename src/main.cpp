@@ -22,9 +22,10 @@ ostream& operator<<(ostream& os,
 
 
 int main(int argc, char *argv[]) {
+    //init close
     auto start = std::chrono::high_resolution_clock::now();
 
-    constexpr int numPaths = 1000000;
+    constexpr int numPaths = 100000;
     try {
         //parse generated csvs
         const std::vector<double> marketSpots = DataParser::parseCSVs("../data/market_spots.csv");
@@ -32,6 +33,9 @@ int main(int argc, char *argv[]) {
         const std::vector<double> marketCorrelation = DataParser::parseCSVs("../data/market_correlation.csv");
 
         //printing data
+        auto avg = 0.0;
+        for (const auto i : marketSpots) avg += i;
+        std::cout << "current avg: " << avg / static_cast<double>(marketSpots.size()) << std::endl;
         std::cout << "spots: " << std::endl << marketSpots << std::endl <<"volatilities: " << std::endl ;
         std::cout << marketVols << std::endl << "correlation_matrix: "  ;
         for (const auto [i, val] : std::views::enumerate(marketCorrelation))
@@ -50,13 +54,17 @@ int main(int argc, char *argv[]) {
 
         std::vector<Asset> basket;
         basket.reserve(numAssets); //avoid reallocs
-        for (int i = 0; i < numAssets; ++i) {
+        for (int i = 0; i < numAssets; ++i)
             basket.push_back({marketSpots[i], marketVols[i], riskFreeRate});
-        }
+
+        auto startmat = std::chrono::high_resolution_clock::now();
         const std::vector<double> choleskyMatrix = LinearAlgebraProvider::cholesky(marketCorrelation, numAssets);
+        auto endmat = std::chrono::high_resolution_clock::now();
+        const auto diff = static_cast<double>((endmat-startmat).count()) / 1000000000.0;
+        std::cout << "Wall-clock runtime for decomp took: " << diff << "s "<< std::endl;
 
         //running sim and pricing pricing
-        constexpr double strikePrice = 200.0;
+        constexpr double strikePrice = 75.0;
         const MultiAssetSimulator simulator(numAssets, numSteps, timeToMaturity, choleskyMatrix);
         const BasketCallOption basketCallModel(simulator);
         const double optionPrice = basketCallModel.calculateBasketCallPrice(numPaths, strikePrice, timeToMaturity, riskFreeRate, basket);
@@ -68,7 +76,8 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     const auto end = std::chrono::high_resolution_clock::now();
-    std::cout << "Wall-clock runtime: " << end-start << " with " << numPaths << " paths." << std::endl;
+    const auto diff = static_cast<double>((end-start).count()) / 1000000000.0;
+    std::cout << "Wall-clock runtime: " << diff << "s with " << numPaths << " paths." << std::endl;
 
     return 0;
 }
